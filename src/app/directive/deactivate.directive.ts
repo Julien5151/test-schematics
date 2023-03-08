@@ -1,8 +1,8 @@
 import {
   Directive,
   inject,
-  Input,
   OnInit,
+  TemplateRef,
   ViewContainerRef,
 } from '@angular/core';
 import { DeactivatorService } from '../services/deactivator.service';
@@ -12,17 +12,20 @@ import { DeactivatorService } from '../services/deactivator.service';
   standalone: true,
 })
 export class DeactivateDirective implements OnInit {
-  @Input()
-  componentName: string = '';
   private deactivatorService = inject(DeactivatorService);
-  private vcr = inject(ViewContainerRef);
+  private viewContainerRef = inject(ViewContainerRef);
+  private templateRef = inject(TemplateRef);
 
   public ngOnInit(): void {
     console.log('On init deactivate directive');
-    console.log(this.vcr);
-    //this.renderer2.setStyle(this.elementRef.nativeElement, 'display', 'none');
-    // this.ngIfDirective.ngIf = !this.deactivatorService.isComponentDeactivated(
-    //   this.elementRef.nativeElement.tagName.toLowerCase()
-    // );
+    // Je n'ai pas d'autre moyen... Mais c'est un nogo pour moi d'accéder à cette prop
+    // Le jour où elle passe en private réelle, la directive serait cassée
+    const componentSelector = (this.viewContainerRef as any)._hostTNode
+      .value as string;
+    const isComponentDeactivated =
+      this.deactivatorService.isComponentDeactivated(componentSelector);
+    if (!isComponentDeactivated) {
+      this.viewContainerRef.createEmbeddedView(this.templateRef);
+    }
   }
 }
