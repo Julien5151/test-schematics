@@ -18,14 +18,19 @@ export class DeactivateDirective implements OnInit {
 
   public ngOnInit(): void {
     console.log('On init deactivate directive');
-    // Je n'ai pas d'autre moyen... Mais c'est un nogo pour moi d'accéder à cette prop
-    // Le jour où elle passe en private réelle, la directive serait cassée
-    const componentSelector = (this.viewContainerRef as any)._hostTNode
-      .value as string;
+    // Create embedded view to get access to component selector
+    const embeddedView = this.viewContainerRef.createEmbeddedView(
+      this.templateRef
+    );
+    // Extract component selector from HTML tag
+    const componentSelector = (embeddedView.rootNodes[0] as HTMLElement)
+      .localName;
+    // Check for deactivation
     const isComponentDeactivated =
       this.deactivatorService.isComponentDeactivated(componentSelector);
-    if (!isComponentDeactivated) {
-      this.viewContainerRef.createEmbeddedView(this.templateRef);
+    // Destroy the view before it has a chance to be inserted in DOM
+    if (isComponentDeactivated) {
+      embeddedView.destroy();
     }
   }
 }
